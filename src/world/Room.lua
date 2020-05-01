@@ -155,22 +155,24 @@ function Room:update(dt)
     for i = #self.entities, 1, -1 do
         local entity = self.entities[i]
 
-        -- remove entity from the table if health is <= 0
-        if entity.health <= 0 then
-            entity.dead = true
-        elseif not entity.dead then
+        if entity.dead then
+            if entity.drop == false then
+                entity.drop = true
+                if math.random(6) == 1 then self:generateHealth(entity) end
+            end
+        else
             entity:processAI({room = self}, dt)
             entity:update(dt)
-        end
 
-        -- collision between the player and entities in the room
-        if not entity.dead and self.player:collides(entity) and not self.player.invulnerable then
-            gSounds['hit-player']:play()
-            self.player:damage(1)
-            self.player:goInvulnerable(1.5)
+            -- collision between the player and entities in the room
+            if self.player:collides(entity) and not self.player.invulnerable then
+                gSounds['hit-player']:play()
+                self.player:damage(1)
+                self.player:goInvulnerable(1.5)
 
-            if self.player.health == 0 then
-                gStateMachine:change('game-over')
+                if self.player.dead then
+                    gStateMachine:change('game-over')
+                end
             end
         end
     end
@@ -180,7 +182,9 @@ function Room:update(dt)
 
         -- trigger collision callback on object
         if self.player:collides(object) then
-            object:onCollide()
+            if object.onCollide then
+                object:onCollide()
+            end
         end
     end
 end
@@ -235,4 +239,37 @@ function Room:render()
     end
 
     love.graphics.setStencilTest()
+end
+
+function Room:generateHealth(entity)
+    local x = entity.x + (entity.width / 2) - (TILE_SIZE / 2) -- centered
+    local y = entity.y + entity.height - (TILE_SIZE / 2) -- lower height
+    local heart = GameObject( GAME_OBJECT_DEFS['health'], x, y )
+
+    heart.state = math.random(10) == 1 and 'full' or 'half'
+    heart.scale = .5
+
+    print(heart.state)
+
+    -- define a function for the switch that will open all doors in the room
+    heart.onCollide = function()
+        self.player.health = math.min(self.player.health + (heart.state == 'full' and 2 or 1), 6)
+
+        for k, object in pairs(self.objects) do
+            if object == heart then
+                table.remove(self.objects, k)
+                break
+            end
+        end
+    end
+
+    heart.float = 1
+
+    -- how to stop this timer without stopping all other timers?
+    Timer.every(.6, function()
+        heart.float = -heart.float
+        Timer.tween(.5, { [heart] = {y = heart.y + heart.float * (TILE_SIZE/4)} })
+    end)
+
+    table.insert(self.objects, heart)
 end

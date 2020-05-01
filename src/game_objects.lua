@@ -16,15 +16,24 @@ GAME_OBJECT_DEFS = {
         solid = false,
         defaultState = 'unpressed',
         states = {
-            ['unpressed'] = {
-                frame = 2
-            },
-            ['pressed'] = {
-                frame = 1
-            }
+            ['unpressed'] = { frame = 2 },
+            ['pressed']   = { frame = 1 }
         }
     },
     ['pot'] = {
         -- TODO
+    },
+    ['health'] = {
+        type = 'health',
+        texture = 'hearts',
+        frame = 5,
+        width = TILE_SIZE,
+        height = TILE_SIZE,
+        solid = false,
+        defaultState = 'full',
+        states = {
+            ['full'] = { frame = 5 },
+            ['half'] = { frame = 3 }
+        }
     }
 }
