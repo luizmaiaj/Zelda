@@ -16,6 +16,10 @@ WINDOW_HEIGHT = 720
 
 TILE_SIZE = 16
 
+POT_OFFSET_Y = 7
+POT_OFFSET_X = 1
+POT_THROW_DISTANCE = 50
+
 --
 -- entity constants
 --

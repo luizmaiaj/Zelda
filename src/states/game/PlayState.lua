@@ -32,7 +32,8 @@ function PlayState:init()
     self.player.stateMachine = StateMachine {
         ['walk'] = function() return PlayerWalkState(self.player, self.dungeon) end,
         ['idle'] = function() return PlayerIdleState(self.player) end,
-        ['swing-sword'] = function() return PlayerSwingSwordState(self.player, self.dungeon) end
+        ['swing-sword'] = function() return PlayerSwingSwordState(self.player, self.dungeon) end,
+        ['lift-pot'] = function() return PlayerLiftPotState(self.player, self.dungeon) end
     }
     self.player:changeState('idle')
 end
@@ -68,8 +69,7 @@ function PlayState:render()
             heartFrame = 1
         end
 
-        love.graphics.draw(gTextures['hearts'], gFrames['hearts'][heartFrame],
-            (i - 1) * (TILE_SIZE + 1), 2)
+        love.graphics.draw(gTextures['hearts'], gFrames['hearts'][heartFrame], (i - 1) * (TILE_SIZE + 1), 2)
         
         healthLeft = healthLeft - 2
     end

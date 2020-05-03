@@ -34,6 +34,8 @@ function GameObject:init(def, x, y)
     self.scale = 1
 
     self.float = nil
+    self.lifting = false
+    self.thrown = false
 end
 
 function GameObject:update(dt)

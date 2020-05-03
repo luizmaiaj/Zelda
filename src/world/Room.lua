@@ -80,30 +80,26 @@ end
     Randomly creates an assortment of obstacles for the player to navigate around.
 ]]
 function Room:generateObjects()
-    table.insert(self.objects, GameObject(
-        GAME_OBJECT_DEFS['switch'],
-        math.random(MAP_RENDER_OFFSET_X + TILE_SIZE,
-                    VIRTUAL_WIDTH - TILE_SIZE * 2 - 16),
-        math.random(MAP_RENDER_OFFSET_Y + TILE_SIZE,
-                    VIRTUAL_HEIGHT - (VIRTUAL_HEIGHT - MAP_HEIGHT * TILE_SIZE) + MAP_RENDER_OFFSET_Y - TILE_SIZE - 16)
-    ))
+    self:generateSwitch()
 
-    -- get a reference to the switch
-    local switch = self.objects[1]
+    local potCount = math.random(1, 3)
+    for i = 0, potCount do
+        local pot = GameObject(
+            GAME_OBJECT_DEFS['pot'],
+            math.random(MAP_RENDER_OFFSET_X + TILE_SIZE,
+                        VIRTUAL_WIDTH - TILE_SIZE * 2 - 16),
+            math.random(MAP_RENDER_OFFSET_Y + TILE_SIZE,
+                        VIRTUAL_HEIGHT - (VIRTUAL_HEIGHT - MAP_HEIGHT * TILE_SIZE) + MAP_RENDER_OFFSET_Y - TILE_SIZE - 16)
+        )
 
-    -- define a function for the switch that will open all doors in the room
-    switch.onCollide = function()
-        if switch.state == 'unpressed' then
-            switch.state = 'pressed'
-            
-            -- open every door in the room if we press the switch
-            for k, doorway in pairs(self.doorways) do
-                doorway.open = true
-            end
-
-            gSounds['door']:play()
+        pot.onCollide = function()
+            pot.state = 'broken'
+            pot.thrown = false -- cannot hit monsters anymore
         end
+
+        table.insert(self.objects, pot)
     end
+
 end
 
 --[[
@@ -139,9 +135,7 @@ function Room:generateWallsAndFloors()
                 id = TILE_FLOORS[math.random(#TILE_FLOORS)]
             end
             
-            table.insert(self.tiles[y], {
-                id = id
-            })
+            table.insert(self.tiles[y], { id = id })
         end
     end
 end
@@ -151,6 +145,24 @@ function Room:update(dt)
     if self.adjacentOffsetX ~= 0 or self.adjacentOffsetY ~= 0 then return end
 
     self.player:update(dt)
+
+    -- self.pot = nil
+    for k, object in pairs(self.objects) do
+        object:update(dt)
+
+        -- trigger collision callback on object
+        if not object.lifting and self.player:collides(object) then
+            if not object.solid and object.onCollide then -- hearts
+                object:onCollide()
+            elseif object.solid then -- pots
+                self:stopPlayer(object, dt)
+                
+                if not(self.player.pot ~= nil and self.player.pot.lifting) and object.state ~= 'broken' then
+                    self.player.pot = object
+                end
+            end
+        end
+    end
 
     for i = #self.entities, 1, -1 do
         local entity = self.entities[i]
@@ -174,16 +186,16 @@ function Room:update(dt)
                     gStateMachine:change('game-over')
                 end
             end
-        end
-    end
 
-    for k, object in pairs(self.objects) do
-        object:update(dt)
-
-        -- trigger collision callback on object
-        if self.player:collides(object) then
-            if object.onCollide then
-                object:onCollide()
+            for k, object in pairs(self.objects) do
+        
+                if object.thrown == true and entity:collides(object) then
+                    if object.solid then -- flyint pots
+                        object:onCollide()
+                        
+                        entity:damage(1)
+                    end
+                end
             end
         end
     end
@@ -199,14 +211,13 @@ function Room:render()
         end
     end
 
-    -- render doorways; stencils are placed where the arches are after so the player can
-    -- move through them convincingly
+    -- render doorways; stencils are placed where the arches are after so the player can move through them convincingly
     for k, doorway in pairs(self.doorways) do
         doorway:render(self.adjacentOffsetX, self.adjacentOffsetY)
     end
 
     for k, object in pairs(self.objects) do
-        object:render(self.adjacentOffsetX, self.adjacentOffsetY)
+        if not object.lifting then object:render(self.adjacentOffsetX, self.adjacentOffsetY) end
     end
 
     for k, entity in pairs(self.entities) do
@@ -216,20 +227,13 @@ function Room:render()
     -- stencil out the door arches so it looks like the player is going through
     love.graphics.stencil(function()
         -- left
-        love.graphics.rectangle('fill', -TILE_SIZE - 6, MAP_RENDER_OFFSET_Y + (MAP_HEIGHT / 2) * TILE_SIZE - TILE_SIZE,
-            TILE_SIZE * 2 + 6, TILE_SIZE * 2)
-        
+        love.graphics.rectangle('fill', -TILE_SIZE - 6, MAP_RENDER_OFFSET_Y + (MAP_HEIGHT / 2) * TILE_SIZE - TILE_SIZE, TILE_SIZE * 2 + 6, TILE_SIZE * 2)
         -- right
-        love.graphics.rectangle('fill', MAP_RENDER_OFFSET_X + (MAP_WIDTH * TILE_SIZE) - 6,
-            MAP_RENDER_OFFSET_Y + (MAP_HEIGHT / 2) * TILE_SIZE - TILE_SIZE, TILE_SIZE * 2 + 6, TILE_SIZE * 2)
-        
+        love.graphics.rectangle('fill', MAP_RENDER_OFFSET_X + (MAP_WIDTH * TILE_SIZE) - 6, MAP_RENDER_OFFSET_Y + (MAP_HEIGHT / 2) * TILE_SIZE - TILE_SIZE, TILE_SIZE * 2 + 6, TILE_SIZE * 2)
         -- top
-        love.graphics.rectangle('fill', MAP_RENDER_OFFSET_X + (MAP_WIDTH / 2) * TILE_SIZE - TILE_SIZE,
-            -TILE_SIZE - 6, TILE_SIZE * 2, TILE_SIZE * 2 + 12)
-        
+        love.graphics.rectangle('fill', MAP_RENDER_OFFSET_X + (MAP_WIDTH / 2) * TILE_SIZE - TILE_SIZE, -TILE_SIZE - 6, TILE_SIZE * 2, TILE_SIZE * 2 + 12)
         --bottom
-        love.graphics.rectangle('fill', MAP_RENDER_OFFSET_X + (MAP_WIDTH / 2) * TILE_SIZE - TILE_SIZE,
-            VIRTUAL_HEIGHT - TILE_SIZE - 6, TILE_SIZE * 2, TILE_SIZE * 2 + 12)
+        love.graphics.rectangle('fill', MAP_RENDER_OFFSET_X + (MAP_WIDTH / 2) * TILE_SIZE - TILE_SIZE, VIRTUAL_HEIGHT - TILE_SIZE - 6, TILE_SIZE * 2, TILE_SIZE * 2 + 12)
     end, 'replace', 1)
 
     love.graphics.setStencilTest('less', 1)
@@ -239,6 +243,10 @@ function Room:render()
     end
 
     love.graphics.setStencilTest()
+
+    for k, object in pairs(self.objects) do
+        if object.lifting then object:render(self.adjacentOffsetX, self.adjacentOffsetY) end
+    end
 end
 
 function Room:generateHealth(entity)
@@ -249,7 +257,7 @@ function Room:generateHealth(entity)
     heart.state = math.random(10) == 1 and 'full' or 'half'
     heart.scale = .5
 
-    print(heart.state)
+    -- print(heart.state)
 
     -- define a function for the switch that will open all doors in the room
     heart.onCollide = function()
@@ -272,4 +280,43 @@ function Room:generateHealth(entity)
     end)
 
     table.insert(self.objects, heart)
+end
+
+function Room:generateSwitch()
+    table.insert(self.objects, GameObject(
+        GAME_OBJECT_DEFS['switch'],
+        math.random(MAP_RENDER_OFFSET_X + TILE_SIZE,
+                    VIRTUAL_WIDTH - TILE_SIZE * 2 - 16),
+        math.random(MAP_RENDER_OFFSET_Y + TILE_SIZE,
+                    VIRTUAL_HEIGHT - (VIRTUAL_HEIGHT - MAP_HEIGHT * TILE_SIZE) + MAP_RENDER_OFFSET_Y - TILE_SIZE - 16)
+    ))
+
+    -- get a reference to the switch
+    local switch = self.objects[1]
+
+    -- define a function for the switch that will open all doors in the room
+    switch.onCollide = function()
+        if switch.state == 'unpressed' then
+            switch.state = 'pressed'
+            
+            -- open every door in the room if we press the switch
+            for k, doorway in pairs(self.doorways) do
+                doorway.open = true
+            end
+
+            gSounds['door']:play()
+        end
+    end
+end
+
+function Room:stopPlayer(object, dt)
+    if self.player.direction == 'right' then
+        self.player.x = self.player.x - (dt * PLAYER_WALK_SPEED)
+    elseif self.player.direction == 'left' then
+        self.player.x = self.player.x + (dt * PLAYER_WALK_SPEED)
+    elseif self.player.direction == 'up' then
+        self.player.y = self.player.y + (dt * PLAYER_WALK_SPEED)
+    elseif self.player.direction == 'down' then
+        self.player.y = self.player.y - (dt * PLAYER_WALK_SPEED)
+    end
 end

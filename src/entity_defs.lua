@@ -12,7 +12,7 @@ ENTITY_DEFS = {
         animations = {
             ['walk-left'] = {
                 frames = {13, 14, 15, 16},
-                interval = 0.155,
+                interval = 0.15,
                 texture = 'character-walk'
             },
             ['walk-right'] = {
@@ -46,6 +46,22 @@ ENTITY_DEFS = {
                 frames = {9},
                 texture = 'character-walk'
             },
+            ['pot-idle-left'] = {
+                frames = {13},
+                texture = 'character-pot-walk'
+            },
+            ['pot-idle-right'] = {
+                frames = {5},
+                texture = 'character-pot-walk'
+            },
+            ['pot-idle-down'] = {
+                frames = {1},
+                texture = 'character-pot-walk'
+            },
+            ['pot-idle-up'] = {
+                frames = {9},
+                texture = 'character-pot-walk'
+            },
             ['sword-left'] = {
                 frames = {13, 14, 15, 16},
                 interval = 0.05,
@@ -69,6 +85,54 @@ ENTITY_DEFS = {
                 interval = 0.05,
                 looping = false,
                 texture = 'character-swing-sword'
+            },
+            ['lift-left'] = {
+                frames = {10, 11, 12},
+                interval = .3,
+                looping = false,
+                texture = 'character-pot-lift'
+            },
+            ['lift-right'] = {
+                frames = {4, 5, 6},
+                interval = .3,
+                looping = false,
+                texture = 'character-pot-lift'
+            },
+            ['lift-down'] = {
+                frames = {1, 2, 3},
+                interval = .3,
+                looping = false,
+                texture = 'character-pot-lift'
+            },
+            ['lift-up'] = {
+                frames = {7, 8, 9},
+                interval = .3,
+                looping = false,
+                texture = 'character-pot-lift'
+            },
+            ['pot-walk-left'] = {
+                frames = {13, 14, 15, 16},
+                interval = .15,
+                looping = false,
+                texture = 'character-pot-walk'
+            },
+            ['pot-walk-right'] = {
+                frames = {5, 6, 7, 8},
+                interval = .15,
+                looping = false,
+                texture = 'character-pot-walk'
+            },
+            ['pot-walk-down'] = {
+                frames = {1, 2, 3, 4},
+                interval = .15,
+                looping = false,
+                texture = 'character-pot-walk'
+            },
+            ['pot-walk-up'] = {
+                frames = {9, 10, 11, 12},
+                interval = .15,
+                looping = false,
+                texture = 'character-pot-walk'
             }
         }
     },

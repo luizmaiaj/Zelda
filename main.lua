@@ -13,11 +13,7 @@ function love.load()
     love.window.setTitle('Legend of Zelda')
     love.graphics.setDefaultFilter('nearest', 'nearest')
 
-    push:setupScreen(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT, {
-        fullscreen = false,
-        vsync = true,
-        resizable = true
-    })
+    push:setupScreen(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT, { fullscreen = false, vsync = true, resizable = true })
 
     love.graphics.setFont(gFonts['small'])
 

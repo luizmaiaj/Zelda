@@ -11,8 +11,8 @@ GAME_OBJECT_DEFS = {
         type = 'switch',
         texture = 'switches',
         frame = 2,
-        width = 16,
-        height = 16,
+        width = TILE_SIZE,
+        height = TILE_SIZE,
         solid = false,
         defaultState = 'unpressed',
         states = {
@@ -21,7 +21,18 @@ GAME_OBJECT_DEFS = {
         }
     },
     ['pot'] = {
-        -- TODO
+        type = 'tiles',
+        texture = 'tiles',
+        frame = 33,
+        width = TILE_SIZE,
+        height = TILE_SIZE,
+        solid = true,
+        defaultState = 'closed',
+        states = {
+            ['open']   = { frame = 14 },
+            ['closed'] = { frame = 33 },
+            ['broken'] = { frame = 52 }
+        }
     },
     ['health'] = {
         type = 'health',
