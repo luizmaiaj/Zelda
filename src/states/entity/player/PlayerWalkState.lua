@@ -20,7 +20,7 @@ end
 function PlayerWalkState:update(dt)
     -- change the animation if the pot is being carried
     local animation = ''
-    if self.entity.pot ~= nil and self.entity.pot.lifting then
+    if self.entity.pot ~= nil and self.entity.pot.lifting and self.entity.pot.thrown == false then
         animation = 'pot-'
     end
 
